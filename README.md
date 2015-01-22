@@ -24,6 +24,10 @@ To scale the container farm, simply add more units to the docker service
 
 ## Known Limitations
 
+This bundle will **not** work on the local provider or when using --to lxc
+scenarios. AppArmor has a very stringent default policy that breaks the
+functionality of docker/flannel being embedded in LXC.
+
 ETCD is currently deployed as a single node, and has not been tested
 by adding additional ETCD units. This can provide a single point of failure if
 the ETCD unit were to 'go away'.
@@ -33,6 +37,8 @@ a common practice to deploy the ETCD unit to the state-server if you have the
 capacity to co-locate on machine 0 of your environment
 
     juju deploy cs:~hazmat/trusty/etcd --to 0
+
+
 
 ## More Information
 
