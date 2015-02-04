@@ -34,14 +34,6 @@ This will bootstrap your active environment (if one is not already
 active) and deploy the services.
 
 
-## Scaling the Services
-
-To scale the container farm, simply add more units to the docker
-service:
-
-    juju add-unit docker
-
-
 ## Using the your new docker "cluster"
 
 To interact with your dockers, use `juju ssh` to get console on the
@@ -53,6 +45,47 @@ unit:
 Use `juju run` to run remotely commands as root:
 
     juju run --service "docker ps"
+
+
+### Do some dockering
+
+Let's launch and expose a simple web page.
+
+  ```
+  juju ssh docker/0 -t sudo tmux
+  docker run --name mynginx2 \
+    -v /var/www:/usr/share/nginx/html:ro \
+    -v /var/nginx/conf:/etc/nginx:ro \
+    -P -d nginx
+  cat "<html><body>HELLO</body></html>" > /var/www/index.html
+  ```
+
+Let's grab the http port:
+
+  ```
+  pip install docker-py
+  export NGINX_PORT=$(python -c "import docker; dc = docker.Client(); print(next(x['PublicPort'] for x in dc.containers()[0]['Ports'] if x['PrivatePort'] == 80))")
+
+  juju-run docker/0 "open-port ${NGINX_PORT}"
+  echo $NGINX_PORT
+  ```
+
+  Now let's hit the page:
+
+  ```
+  export DKR_IP=$(juju status --format=oneline | grep '^- docker/0'  | cut -d" " -f3)
+  curl $DKR_IP:$NGINX_PORT
+  ```
+
+
+
+### Scaling up the cluster
+
+To scale the container farm, simply add more units to the docker
+service:
+
+    juju add-unit docker
+    juju add-unit -n5 docker
 
 
 ## Known Limitations
